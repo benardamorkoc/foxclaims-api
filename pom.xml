@@ -5,28 +5,24 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>arda.morkoc</groupId>
+    <parent>
+        <groupId>arda.morkoc</groupId>
+        <artifactId>FoxClaims-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>FoxClaims-API</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>FoxClaims-API</name>
     <description>API for the FoxClaims Minecraft plugin</description>
-    <url>https://github.com/benardamorkoc/FoxClaims-API</url>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
 
     <repositories>
         <repository>
@@ -43,5 +39,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
 </project>
