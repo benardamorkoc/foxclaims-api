@@ -1,24 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.github.benardamorkoc</groupId> <!-- GitHub kullanıcı adını buraya yaz -->
-  <artifactId>FoxClaims-API</artifactId>
-  <version>1.0.0</version>
-  <packaging>jar</packaging>
+    <groupId>com.github.benardamorkoc</groupId> <!-- GitHub kullanıcı adını buraya yaz -->
+    <artifactId>FoxClaims-API</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
 
-  <name>FoxClaims-API</name>
-  <description>API for FoxClaims plugin</description>
-  <url>https://github.com/benardamorkoc/FoxClaims-API</url>
+    <name>FoxClaims-API</name>
+    <description>API for FoxClaims plugin</description>
+    <url>https://github.com/benardamorkoc/FoxClaims-API</url>
 
-  <licenses>
-    <license>
-      <name>MIT License</name>
-      <url>https://opensource.org/licenses/MIT</url>
-    </license>
-  </licenses>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
 
 </project>
