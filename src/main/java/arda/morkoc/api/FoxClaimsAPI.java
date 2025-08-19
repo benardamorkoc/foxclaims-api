@@ -1,5 +1,6 @@
 package arda.morkoc.api;
 
+import arda.morkoc.api.model.Claim;
 import org.bukkit.entity.Player;
 
 /**
@@ -8,31 +9,7 @@ import org.bukkit.entity.Player;
  */
 public interface FoxClaimsAPI {
 
-    /**
-     * Belirli bir oyuncuya claim mesajı gönderir
-     * @param playerName Oyuncu adı
-     * @param message Gönderilecek mesaj
-     * @return Mesaj başarıyla gönderildiyse true, aksi halde false
-     */
-    boolean sendClaimMessage(String playerName, String message);
+    // Dünya, chunkX ve chunkZ'ye göre Claim nesnesini döndüren metod
+    Claim getClaimAtChunk(String worldName, int chunkX, int chunkZ);
 
-    /**
-     * Belirli bir oyuncuya claim mesajı gönderir (Player objesi ile)
-     * @param player Oyuncu objesi
-     * @param message Gönderilecek mesaj
-     * @return Mesaj başarıyla gönderildiyse true, aksi halde false
-     */
-    boolean sendClaimMessage(Player player, String message);
-
-    /**
-     * API'nin aktif olup olmadığını kontrol eder
-     * @return API aktifse true, aksi halde false
-     */
-    boolean isAPIEnabled();
-
-    /**
-     * API versiyonunu döndürür
-     * @return API versiyonu
-     */
-    String getAPIVersion();
 }
