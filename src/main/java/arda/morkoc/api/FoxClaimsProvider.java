@@ -4,14 +4,15 @@ import arda.morkoc.api.model.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * FoxClaims API Provider - Reflection Based
- * Classloader problemlerini çözer
+ * FoxClaims API Provider - Callback Sistemi ile
  */
 public class FoxClaimsProvider {
 
@@ -19,12 +20,24 @@ public class FoxClaimsProvider {
     private static Method getClaimAtChunkMethod;
     private static Method getClaimAtLocationMethod;
     private static Method getClaimByIdMethod;
-    private static Method triggerEventMethod;
     private static boolean initialized = false;
+
+    // Callback sistemi
+    private static final List<ClaimCallback> callbacks = new CopyOnWriteArrayList<>();
+
+    /**
+     * Claim işlemleri için callback interface
+     */
+    public interface ClaimCallback {
+        void onClaimCreate(Claim claim, Player player);
+
+        // İlerde başka eventler ekleyebilirsiniz:
+        // void onClaimDelete(Claim claim, Player player);
+        // void onClaimEnter(Claim claim, Player player);
+    }
 
     /**
      * Provider'ı başlatır
-     * @return Başlatma başarılı mı?
      */
     public static boolean initialize() {
         if (initialized) return true;
@@ -36,7 +49,6 @@ public class FoxClaimsProvider {
                 return false;
             }
 
-            // Metodları cache'le
             getClaimAtChunkMethod = foxPlugin.getClass()
                     .getMethod("getClaimAtChunk", String.class, int.class, int.class);
 
@@ -45,13 +57,6 @@ public class FoxClaimsProvider {
 
             getClaimByIdMethod = foxPlugin.getClass()
                     .getMethod("getClaimById", int.class);
-
-            try {
-                triggerEventMethod = foxPlugin.getClass()
-                        .getMethod("triggerAPIEvent", String.class, Object.class, Object.class);
-            } catch (NoSuchMethodException e) {
-                System.out.println("Ana plugin'de triggerAPIEvent methodu bulunamadı. Event sistemi çalışmayabilir.");
-            }
 
             initialized = true;
             return true;
@@ -62,82 +67,73 @@ public class FoxClaimsProvider {
         }
     }
 
-    /**
-     * API'nin mevcut olup olmadığını kontrol eder
-     */
     public static boolean isAvailable() {
         return initialize();
     }
 
     /**
-     * Chunk'a göre claim alır
+     * Callback sistemi - Plugin'ler buraya listener ekler
      */
+    public static void registerCallback(ClaimCallback callback) {
+        callbacks.add(callback);
+        System.out.println("✅ Callback kaydedildi. Toplam callback: " + callbacks.size());
+    }
+
+    public static void unregisterCallback(ClaimCallback callback) {
+        callbacks.remove(callback);
+    }
+
+    /**
+     * Ana plugin'den çağrılacak - Claim oluşturulduğunda
+     */
+    public static void notifyClaimCreate(Claim claim, Player player) {
+        System.out.println("🔔 Claim create bildirimi: " + callbacks.size() + " callback var");
+
+        for (ClaimCallback callback : callbacks) {
+            try {
+                callback.onClaimCreate(claim, player);
+            } catch (Exception e) {
+                System.out.println("Callback hatası: " + e.getMessage());
+            }
+        }
+    }
+
     public static Claim getClaimAtChunk(String worldName, int chunkX, int chunkZ) {
         if (!initialize()) return null;
 
         try {
             Object claimObj = getClaimAtChunkMethod.invoke(foxPlugin, worldName, chunkX, chunkZ);
             return convertToClaim(claimObj);
-
         } catch (Exception e) {
             System.out.println("getClaimAtChunk hatası: " + e.getMessage());
             return null;
         }
     }
 
-    /**
-     * Location'a göre claim alır
-     */
     public static Claim getClaimAtLocation(Location location) {
         if (!initialize()) return null;
 
         try {
             Object claimObj = getClaimAtLocationMethod.invoke(foxPlugin, location);
             return convertToClaim(claimObj);
-
         } catch (Exception e) {
             System.out.println("getClaimAtLocation hatası: " + e.getMessage());
             return null;
         }
     }
 
-    /**
-     * ID'ye göre claim alır
-     */
     public static Claim getClaimById(int id) {
         if (!initialize()) return null;
 
         try {
             Object claimObj = getClaimByIdMethod.invoke(foxPlugin, id);
             return convertToClaim(claimObj);
-
         } catch (Exception e) {
             System.out.println("getClaimById hatası: " + e.getMessage());
             return null;
         }
     }
 
-    /**
-     * Event tetikleme - harici pluginler için
-     */
-    public static void triggerClaimCreateEvent(Claim claim, Player player) {
-        if (!initialize() || triggerEventMethod == null) {
-            System.out.println("Event sistemi mevcut değil!");
-            return;
-        }
-
-        try {
-            // Ana plugin'deki triggerAPIEvent metodunu çağır
-            triggerEventMethod.invoke(foxPlugin, "ClaimCreate", claim, player);
-
-        } catch (Exception e) {
-            System.out.println("Event tetikleme hatası: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Object'i Claim'e çevirir (mevcut kodunuz)
-     */
     private static Claim convertToClaim(Object claimObj) {
         if (claimObj == null) return null;
 
