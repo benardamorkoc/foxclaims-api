@@ -19,6 +19,7 @@ public class FoxClaimsProvider {
     private static Method getClaimAtChunkMethod;
     private static Method getClaimAtLocationMethod;
     private static Method getClaimByIdMethod;
+    private static Method triggerEventMethod;
     private static boolean initialized = false;
 
     /**
@@ -44,6 +45,13 @@ public class FoxClaimsProvider {
 
             getClaimByIdMethod = foxPlugin.getClass()
                     .getMethod("getClaimById", int.class);
+
+            try {
+                triggerEventMethod = foxPlugin.getClass()
+                        .getMethod("triggerAPIEvent", String.class, Object.class, Object.class);
+            } catch (NoSuchMethodException e) {
+                System.out.println("Ana plugin'de triggerAPIEvent methodu bulunamadı. Event sistemi çalışmayabilir.");
+            }
 
             initialized = true;
             return true;
@@ -113,19 +121,14 @@ public class FoxClaimsProvider {
      * Event tetikleme - harici pluginler için
      */
     public static void triggerClaimCreateEvent(Claim claim, Player player) {
-        if (!initialize()) return;
+        if (!initialize() || triggerEventMethod == null) {
+            System.out.println("Event sistemi mevcut değil!");
+            return;
+        }
 
         try {
-            // Reflection ile event class'ını bul
-            Class<?> eventClass = Class.forName("arda.morkoc.api.events.ClaimCreateEvent");
-
-            // Constructor ile event oluştur
-            java.lang.reflect.Constructor<?> constructor =
-                    eventClass.getConstructor(Claim.class, Player.class);
-            Object event = constructor.newInstance(claim, player);
-
-            // Event'i tetikle
-            org.bukkit.Bukkit.getPluginManager().callEvent((Event) event);
+            // Ana plugin'deki triggerAPIEvent metodunu çağır
+            triggerEventMethod.invoke(foxPlugin, "ClaimCreate", claim, player);
 
         } catch (Exception e) {
             System.out.println("Event tetikleme hatası: " + e.getMessage());
