@@ -3,6 +3,8 @@ package arda.morkoc.api;
 import arda.morkoc.api.model.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
