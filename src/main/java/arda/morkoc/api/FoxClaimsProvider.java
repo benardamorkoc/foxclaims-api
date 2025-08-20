@@ -110,6 +110,29 @@ public class FoxClaimsProvider {
     }
 
     /**
+     * Event tetikleme - harici pluginler için
+     */
+    public static void triggerClaimCreateEvent(Claim claim, Player player) {
+        if (!initialize()) return;
+
+        try {
+            // Reflection ile event class'ını bul
+            Class<?> eventClass = Class.forName("arda.morkoc.api.events.ClaimCreateEvent");
+
+            // Constructor ile event oluştur
+            java.lang.reflect.Constructor<?> constructor =
+                    eventClass.getConstructor(Claim.class, Player.class);
+            Object event = constructor.newInstance(claim, player);
+
+            // Event'i tetikle
+            org.bukkit.Bukkit.getPluginManager().callEvent((Event) event);
+
+        } catch (Exception e) {
+            System.out.println("Event tetikleme hatası: " + e.getMessage());
+        }
+    }
+
+    /**
      * Object'i Claim'e çevirir (mevcut kodunuz)
      */
     private static Claim convertToClaim(Object claimObj) {
