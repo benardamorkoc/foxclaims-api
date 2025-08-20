@@ -7,12 +7,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * FoxClaims API Provider - Callback Sistemi ile
+ * FoxClaims API Provider - Ana Plugin'de Callback Tutma Sistemi
  */
 public class FoxClaimsProvider {
 
@@ -20,20 +17,15 @@ public class FoxClaimsProvider {
     private static Method getClaimAtChunkMethod;
     private static Method getClaimAtLocationMethod;
     private static Method getClaimByIdMethod;
+    private static Method registerCallbackMethod;
+    private static Method notifyCallbackMethod;
     private static boolean initialized = false;
-
-    // Callback sistemi
-    private static final List<ClaimCallback> callbacks = new CopyOnWriteArrayList<>();
 
     /**
      * Claim işlemleri için callback interface
      */
     public interface ClaimCallback {
         void onClaimCreate(Claim claim, Player player);
-
-        // İlerde başka eventler ekleyebilirsiniz:
-        // void onClaimDelete(Claim claim, Player player);
-        // void onClaimEnter(Claim claim, Player player);
     }
 
     /**
@@ -49,6 +41,7 @@ public class FoxClaimsProvider {
                 return false;
             }
 
+            // Mevcut API metodları
             getClaimAtChunkMethod = foxPlugin.getClass()
                     .getMethod("getClaimAtChunk", String.class, int.class, int.class);
 
@@ -57,6 +50,19 @@ public class FoxClaimsProvider {
 
             getClaimByIdMethod = foxPlugin.getClass()
                     .getMethod("getClaimById", int.class);
+
+            // Callback sistemi için metodlar
+            try {
+                registerCallbackMethod = foxPlugin.getClass()
+                        .getMethod("registerAPICallback", Object.class);
+
+                notifyCallbackMethod = foxPlugin.getClass()
+                        .getMethod("notifyAPICallbacks", Claim.class, Player.class);
+
+                System.out.println("✅ Callback metodları bulundu!");
+            } catch (NoSuchMethodException e) {
+                System.out.println("⚠️ Ana plugin'de callback metodları bulunamadı!");
+            }
 
             initialized = true;
             return true;
@@ -72,29 +78,35 @@ public class FoxClaimsProvider {
     }
 
     /**
-     * Callback sistemi - Plugin'ler buraya listener ekler
+     * Callback kaydı - Ana plugin'e yönlendirir
      */
     public static void registerCallback(ClaimCallback callback) {
-        callbacks.add(callback);
-        System.out.println("✅ Callback kaydedildi. Toplam callback: " + callbacks.size());
-    }
+        if (!initialize() || registerCallbackMethod == null) {
+            System.out.println("❌ Callback sistemi mevcut değil!");
+            return;
+        }
 
-    public static void unregisterCallback(ClaimCallback callback) {
-        callbacks.remove(callback);
+        try {
+            registerCallbackMethod.invoke(foxPlugin, callback);
+            System.out.println("✅ Callback ana plugin'e kaydedildi!");
+        } catch (Exception e) {
+            System.out.println("❌ Callback kaydetme hatası: " + e.getMessage());
+        }
     }
 
     /**
      * Ana plugin'den çağrılacak - Claim oluşturulduğunda
      */
     public static void notifyClaimCreate(Claim claim, Player player) {
-        System.out.println("🔔 Claim create bildirimi: " + callbacks.size() + " callback var");
+        if (!initialize() || notifyCallbackMethod == null) {
+            System.out.println("❌ Callback sistemi mevcut değil!");
+            return;
+        }
 
-        for (ClaimCallback callback : callbacks) {
-            try {
-                callback.onClaimCreate(claim, player);
-            } catch (Exception e) {
-                System.out.println("Callback hatası: " + e.getMessage());
-            }
+        try {
+            notifyCallbackMethod.invoke(foxPlugin, claim, player);
+        } catch (Exception e) {
+            System.out.println("❌ Callback bildirim hatası: " + e.getMessage());
         }
     }
 
