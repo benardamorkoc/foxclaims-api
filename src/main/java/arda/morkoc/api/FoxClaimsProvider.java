@@ -9,7 +9,7 @@ import org.bukkit.plugin.Plugin;
 import java.lang.reflect.Method;
 
 /**
- * FoxClaims API Provider - Ana Plugin'de Callback Tutma Sistemi
+ * FoxClaims API Provider - Object Bazlı Callback
  */
 public class FoxClaimsProvider {
 
@@ -22,10 +22,10 @@ public class FoxClaimsProvider {
     private static boolean initialized = false;
 
     /**
-     * Claim işlemleri için callback interface
+     * Object bazlı callback interface - Claim nesnesini direkt alır
      */
     public interface ClaimCallback {
-        void onClaimCreate(Claim claim, Player player);
+        void onClaimCreate(Object claimObject, Object playerObject);
     }
 
     /**
@@ -41,7 +41,7 @@ public class FoxClaimsProvider {
                 return false;
             }
 
-            // Mevcut API metodları
+            // API metodları
             getClaimAtChunkMethod = foxPlugin.getClass()
                     .getMethod("getClaimAtChunk", String.class, int.class, int.class);
 
@@ -51,17 +51,17 @@ public class FoxClaimsProvider {
             getClaimByIdMethod = foxPlugin.getClass()
                     .getMethod("getClaimById", int.class);
 
-            // Callback sistemi için metodlar
+            // Object callback metodları
             try {
                 registerCallbackMethod = foxPlugin.getClass()
                         .getMethod("registerAPICallback", Object.class);
 
                 notifyCallbackMethod = foxPlugin.getClass()
-                        .getMethod("notifyAPICallbacks", Claim.class, Player.class);
+                        .getMethod("notifyAPICallbacks", Object.class, Object.class);
 
-                System.out.println("✅ Callback metodları bulundu!");
+                System.out.println("✅ Object callback metodları bulundu!");
             } catch (NoSuchMethodException e) {
-                System.out.println("⚠️ Ana plugin'de callback metodları bulunamadı!");
+                System.out.println("⚠️ Ana plugin'de object callback metodları bulunamadı!");
             }
 
             initialized = true;
@@ -78,7 +78,7 @@ public class FoxClaimsProvider {
     }
 
     /**
-     * Callback kaydı - Ana plugin'e yönlendirir
+     * Callback kaydı
      */
     public static void registerCallback(ClaimCallback callback) {
         if (!initialize() || registerCallbackMethod == null) {
@@ -88,14 +88,14 @@ public class FoxClaimsProvider {
 
         try {
             registerCallbackMethod.invoke(foxPlugin, callback);
-            System.out.println("✅ Callback ana plugin'e kaydedildi!");
+            System.out.println("✅ Object callback ana plugin'e kaydedildi!");
         } catch (Exception e) {
-            System.out.println("❌ Callback kaydetme hatası: " + e.getMessage());
+            System.out.println("❌ Object callback kaydetme hatası: " + e.getMessage());
         }
     }
 
     /**
-     * Ana plugin'den çağrılacak - Claim oluşturulduğunda
+     * Claim create bildirimi - Claim objesini direkt geçer
      */
     public static void notifyClaimCreate(Claim claim, Player player) {
         if (!initialize() || notifyCallbackMethod == null) {
@@ -104,9 +104,11 @@ public class FoxClaimsProvider {
         }
 
         try {
+            // Claim ve Player'ı direkt Object olarak geçir
             notifyCallbackMethod.invoke(foxPlugin, claim, player);
+
         } catch (Exception e) {
-            System.out.println("❌ Callback bildirim hatası: " + e.getMessage());
+            System.out.println("❌ Object callback bildirim hatası: " + e.getMessage());
         }
     }
 
@@ -144,6 +146,13 @@ public class FoxClaimsProvider {
             System.out.println("getClaimById hatası: " + e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Object'i Claim'e çevirir - Helper method callback'ler için de kullanılabilir
+     */
+    public static Claim convertObjectToClaim(Object claimObj) {
+        return convertToClaim(claimObj);
     }
 
     private static Claim convertToClaim(Object claimObj) {
