@@ -26,6 +26,7 @@ public class FoxClaimsProvider {
      */
     public interface ClaimCallback {
         void onClaimCreate(Object claimObject, Object playerObject);
+        void onClaimDelete(Object claimObject, Object playerObject);
     }
 
     /**
@@ -57,7 +58,7 @@ public class FoxClaimsProvider {
                         .getMethod("registerAPICallback", Object.class);
 
                 notifyCallbackMethod = foxPlugin.getClass()
-                        .getMethod("notifyAPICallbacks", Object.class, Object.class);
+                        .getMethod("notifyAPICallbacks", String.class, Object.class, Object.class);
 
                 System.out.println("✅ Object callback metodları bulundu!");
             } catch (NoSuchMethodException e) {
@@ -104,11 +105,29 @@ public class FoxClaimsProvider {
         }
 
         try {
-            // Claim ve Player'ı direkt Object olarak geçir
-            notifyCallbackMethod.invoke(foxPlugin, claim, player);
+            // Event type ile birlikte Claim ve Player'ı geçir
+            notifyCallbackMethod.invoke(foxPlugin, "CREATE", claim, player);
 
         } catch (Exception e) {
-            System.out.println("❌ Object callback bildirim hatası: " + e.getMessage());
+            System.out.println("❌ Create callback bildirim hatası: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Claim delete bildirimi - Claim objesini direkt geçer
+     */
+    public static void notifyClaimDelete(Claim claim, Player player) {
+        if (!initialize() || notifyCallbackMethod == null) {
+            System.out.println("❌ Callback sistemi mevcut değil!");
+            return;
+        }
+
+        try {
+            // Event type ile birlikte Claim ve Player'ı geçir
+            notifyCallbackMethod.invoke(foxPlugin, "DELETE", claim, player);
+
+        } catch (Exception e) {
+            System.out.println("❌ Delete callback bildirim hatası: " + e.getMessage());
         }
     }
 
