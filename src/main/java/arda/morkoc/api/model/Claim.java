@@ -1,5 +1,8 @@
 package arda.morkoc.api.model;
 
+import java.util.Map;
+import java.util.UUID;
+
 public class Claim {
     public int id;
     public String name;
@@ -15,9 +18,10 @@ public class Claim {
     public boolean isScreenMessageEnabled;
     public boolean isTimeHidden;
     public boolean isStreamerModeEnabled;
+    public Map<UUID, Map<String, Object>> members;
 
 
-    public Claim(int id, String name, String ownerName, String ownerUUID, String worldName, int x, int y, int z, int chunk_x, int chunk_z, String createdAt, double energy, double maxEnergy, String logWebhook, boolean isMessageAlertEnabled, boolean isSoundAlertEnabled, boolean isScreenMessageEnabled, boolean isTimeHidden, boolean isStreamerModeEnabled) {
+    public Claim(int id, String name, String ownerName, String ownerUUID, String worldName, int x, int y, int z, int chunk_x, int chunk_z, String createdAt, double energy, double maxEnergy, String logWebhook, boolean isMessageAlertEnabled, boolean isSoundAlertEnabled, boolean isScreenMessageEnabled, boolean isTimeHidden, boolean isStreamerModeEnabled, Map<UUID, Map<String, Object>> members) {
         this.id = id;
         this.name = name;
         this.ownerName = ownerName;
@@ -37,5 +41,6 @@ public class Claim {
         this.isScreenMessageEnabled = isScreenMessageEnabled;
         this.isTimeHidden = isTimeHidden;
         this.isStreamerModeEnabled = isStreamerModeEnabled;
+        this.members = members;
     }
 }

@@ -7,6 +7,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * FoxClaims API Provider - Object Bazlı Callback
@@ -199,11 +201,12 @@ public class FoxClaimsProvider {
             boolean isScreenMessageEnabled = (boolean) claimClass.getField("isScreenMessageEnabled").get(claimObj);
             boolean isTimeHidden = (boolean) claimClass.getField("isTimeHidden").get(claimObj);
             boolean isStreamerModeEnabled = (boolean) claimClass.getField("isStreamerModeEnabled").get(claimObj);
+            Map<UUID, Map<String, Object>> members = (Map<UUID, Map<String, Object>>) claimClass.getField("members").get(claimObj);
 
             return new Claim(id, name, ownerName, ownerUUID, worldNameField, x, y, z,
                     chunk_x, chunk_z, createdAt, energy, maxEnergy, logWebhook,
                     isMessageAlertEnabled, isSoundAlertEnabled, isScreenMessageEnabled,
-                    isTimeHidden, isStreamerModeEnabled);
+                    isTimeHidden, isStreamerModeEnabled, members);
 
         } catch (Exception e) {
             System.out.println("Claim dönüştürme hatası: " + e.getMessage());
