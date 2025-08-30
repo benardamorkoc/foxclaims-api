@@ -1,5 +1,6 @@
 package arda.morkoc.api.model;
 
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.UUID;
 
@@ -10,8 +11,9 @@ public class Claim {
     public String ownerUUID;
     public String worldName;
     public int x, y, z, chunk_x, chunk_z;
-    public String createdAt;
-    public double energy, maxEnergy;
+    public Timestamp createdAt;
+    public Timestamp expiredAt;
+    public double maxEnergy;
     public String logWebhook;
     public boolean isMessageAlertEnabled;
     public boolean isSoundAlertEnabled;
@@ -21,7 +23,7 @@ public class Claim {
     public Map<UUID, Map<String, Object>> members;
 
 
-    public Claim(int id, String name, String ownerName, String ownerUUID, String worldName, int x, int y, int z, int chunk_x, int chunk_z, String createdAt, double energy, double maxEnergy, String logWebhook, boolean isMessageAlertEnabled, boolean isSoundAlertEnabled, boolean isScreenMessageEnabled, boolean isTimeHidden, boolean isStreamerModeEnabled, Map<UUID, Map<String, Object>> members) {
+    public Claim(int id, String name, String ownerName, String ownerUUID, String worldName, int x, int y, int z, int chunk_x, int chunk_z, Timestamp createdAt, Timestamp expiredAt, double maxEnergy, String logWebhook, boolean isMessageAlertEnabled, boolean isSoundAlertEnabled, boolean isScreenMessageEnabled, boolean isTimeHidden, boolean isStreamerModeEnabled, Map<UUID, Map<String, Object>> members) {
         this.id = id;
         this.name = name;
         this.ownerName = ownerName;
@@ -33,7 +35,7 @@ public class Claim {
         this.chunk_x = chunk_x;
         this.chunk_z = chunk_z;
         this.createdAt = createdAt;
-        this.energy = energy;
+        this.expiredAt = expiredAt;
         this.maxEnergy = maxEnergy;
         this.logWebhook = logWebhook;
         this.isMessageAlertEnabled = isMessageAlertEnabled;

@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,8 +62,6 @@ public class FoxClaimsProvider {
 
                 notifyCallbackMethod = foxPlugin.getClass()
                         .getMethod("notifyAPICallbacks", String.class, Object.class, Object.class);
-
-                System.out.println("✅ Object callback metodları bulundu!");
             } catch (NoSuchMethodException e) {
                 System.out.println("⚠️ Ana plugin'de object callback metodları bulunamadı!");
             }
@@ -91,7 +90,6 @@ public class FoxClaimsProvider {
 
         try {
             registerCallbackMethod.invoke(foxPlugin, callback);
-            System.out.println("✅ Object callback ana plugin'e kaydedildi!");
         } catch (Exception e) {
             System.out.println("❌ Object callback kaydetme hatası: " + e.getMessage());
         }
@@ -192,8 +190,8 @@ public class FoxClaimsProvider {
             int z = (int) claimClass.getField("z").get(claimObj);
             int chunk_x = (int) claimClass.getField("chunk_x").get(claimObj);
             int chunk_z = (int) claimClass.getField("chunk_z").get(claimObj);
-            String createdAt = (String) claimClass.getField("createdAt").get(claimObj);
-            double energy = (double) claimClass.getField("energy").get(claimObj);
+            Timestamp createdAt = (Timestamp) claimClass.getField("createdAt").get(claimObj);
+            Timestamp expiredAt = (Timestamp) claimClass.getField("expiredAt").get(claimObj);
             double maxEnergy = (double) claimClass.getField("maxEnergy").get(claimObj);
             String logWebhook = (String) claimClass.getField("logWebhook").get(claimObj);
             boolean isMessageAlertEnabled = (boolean) claimClass.getField("isMessageAlertEnabled").get(claimObj);
@@ -204,7 +202,7 @@ public class FoxClaimsProvider {
             Map<UUID, Map<String, Object>> members = (Map<UUID, Map<String, Object>>) claimClass.getField("members").get(claimObj);
 
             return new Claim(id, name, ownerName, ownerUUID, worldNameField, x, y, z,
-                    chunk_x, chunk_z, createdAt, energy, maxEnergy, logWebhook,
+                    chunk_x, chunk_z, createdAt, expiredAt, maxEnergy, logWebhook,
                     isMessageAlertEnabled, isSoundAlertEnabled, isScreenMessageEnabled,
                     isTimeHidden, isStreamerModeEnabled, members);
 
