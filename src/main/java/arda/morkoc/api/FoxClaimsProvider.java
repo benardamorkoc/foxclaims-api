@@ -190,6 +190,7 @@ public class FoxClaimsProvider {
             int z = (int) claimClass.getField("z").get(claimObj);
             int chunk_x = (int) claimClass.getField("chunk_x").get(claimObj);
             int chunk_z = (int) claimClass.getField("chunk_z").get(claimObj);
+            String effectType = (String) claimClass.getField("effectType").get(claimObj);
             Timestamp createdAt = (Timestamp) claimClass.getField("createdAt").get(claimObj);
             double energy = (double) claimClass.getField("energy").get(claimObj);
             double maxEnergy = (double) claimClass.getField("maxEnergy").get(claimObj);
@@ -202,7 +203,7 @@ public class FoxClaimsProvider {
             Map<UUID, Map<String, Object>> members = (Map<UUID, Map<String, Object>>) claimClass.getField("members").get(claimObj);
 
             return new Claim(id, name, ownerName, ownerUUID, worldNameField, x, y, z,
-                    chunk_x, chunk_z, createdAt, energy, maxEnergy, logWebhook,
+                    chunk_x, chunk_z, effectType, createdAt, energy, maxEnergy, logWebhook,
                     isMessageAlertEnabled, isSoundAlertEnabled, isScreenMessageEnabled,
                     isTimeHidden, isStreamerModeEnabled, members);
 
