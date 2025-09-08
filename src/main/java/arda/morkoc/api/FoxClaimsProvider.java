@@ -32,12 +32,17 @@ public class FoxClaimsProvider {
     public static boolean initialize() {
         if (initialized) return true;
 
+        System.out.println("🔧 FoxClaimsProvider initialize ediliyor...");
+
         try {
             foxPlugin = Bukkit.getPluginManager().getPlugin("FoxClaims");
 
             if (foxPlugin == null || !foxPlugin.isEnabled()) {
+                System.out.println("❌ FoxClaims plugin bulunamadı!");
                 return false;
             }
+
+            System.out.println("✅ FoxClaims plugin bulundu!");
 
             // API metodları
             getClaimAtChunkMethod = foxPlugin.getClass()
@@ -48,6 +53,8 @@ public class FoxClaimsProvider {
 
             getClaimByIdMethod = foxPlugin.getClass()
                     .getMethod("getClaimById", int.class);
+
+            System.out.println("✅ Temel API metodları yüklendi!");
 
             // Callback metodları - Event sistemi için
             try {
@@ -65,10 +72,12 @@ public class FoxClaimsProvider {
             }
 
             initialized = true;
+            System.out.println("✅ FoxClaimsProvider initialize tamamlandı!");
             return true;
 
         } catch (Exception e) {
-            System.out.println("FoxClaimsProvider initialize hatası: " + e.getMessage());
+            System.out.println("❌ FoxClaimsProvider initialize hatası: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -84,17 +93,23 @@ public class FoxClaimsProvider {
             Object eventHandler = new Object() {
                 @SuppressWarnings("unused")
                 public void onClaimCreate(Object claimObject, Object playerObject) {
+                    System.out.println("🎯 Callback onClaimCreate tetiklendi!");
                     Claim claim = convertToClaim(claimObject);
                     Player player = (Player) playerObject;
 
                     if (claim != null && player != null) {
+                        System.out.println("🚀 FoxClaimsCreateEvent oluşturuluyor...");
                         FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
                         Bukkit.getPluginManager().callEvent(event);
+                        System.out.println("✅ Event tetiklendi!");
+                    } else {
+                        System.out.println("❌ Claim veya Player null!");
                     }
                 }
 
                 @SuppressWarnings("unused")
                 public void onClaimDelete(Object claimObject, Object playerObject) {
+                    System.out.println("🎯 Callback onClaimDelete tetiklendi!");
                     Claim claim = convertToClaim(claimObject);
                     Player player = (Player) playerObject;
 
@@ -110,6 +125,7 @@ public class FoxClaimsProvider {
 
         } catch (Exception e) {
             System.out.println("❌ Event handler kaydetme hatası: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -122,9 +138,17 @@ public class FoxClaimsProvider {
      * Bu metodu ana plugininizden claim oluşturulduğunda çağırın
      */
     public static void notifyClaimCreate(Claim claim, Player player) {
+        System.out.println("📢 notifyClaimCreate (Claim) çağrıldı!");
+        System.out.println("   - Claim ID: " + (claim != null ? claim.id : "null"));
+        System.out.println("   - Player: " + (player != null ? player.getName() : "null"));
+
         if (claim != null && player != null) {
+            System.out.println("🎯 Event oluşturuluyor ve tetikleniyor...");
             FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
             Bukkit.getPluginManager().callEvent(event);
+            System.out.println("✅ Event başarıyla tetiklendi!");
+        } else {
+            System.out.println("❌ Claim veya Player null - event tetiklenmedi!");
         }
     }
 
@@ -133,6 +157,8 @@ public class FoxClaimsProvider {
      * Bu metodu ana plugininizden claim silindiğinde çağırın
      */
     public static void notifyClaimDelete(Claim claim, Player player) {
+        System.out.println("📢 notifyClaimDelete (Claim) çağrıldı!");
+
         if (claim != null && player != null) {
             FoxClaimsDeleteEvent event = new FoxClaimsDeleteEvent(claim, player);
             Bukkit.getPluginManager().callEvent(event);
@@ -144,7 +170,24 @@ public class FoxClaimsProvider {
      * Bu metodu ana plugininizden direkt object ile çağırabilirsiniz
      */
     public static void notifyClaimCreate(Object claimObject, Player player) {
+        System.out.println("📢 notifyClaimCreate (Object) çağrıldı!");
+        System.out.println("   - ClaimObject: " + (claimObject != null ? claimObject.getClass().getSimpleName() : "null"));
+        System.out.println("   - Player: " + (player != null ? player.getName() : "null"));
+
+        if (claimObject == null) {
+            System.out.println("❌ ClaimObject null - işlem durduruluyor!");
+            return;
+        }
+
+        System.out.println("🔄 Object -> Claim dönüştürülüyor...");
         Claim claim = convertToClaim(claimObject);
+
+        if (claim == null) {
+            System.out.println("❌ Claim dönüştürme başarısız!");
+            return;
+        }
+
+        System.out.println("✅ Claim başarıyla dönüştürüldü - ID: " + claim.id);
         notifyClaimCreate(claim, player);
     }
 
@@ -153,6 +196,7 @@ public class FoxClaimsProvider {
      * Bu metodu ana plugininizden direkt object ile çağırabilirsiniz
      */
     public static void notifyClaimDelete(Object claimObject, Player player) {
+        System.out.println("📢 notifyClaimDelete (Object) çağrıldı!");
         Claim claim = convertToClaim(claimObject);
         notifyClaimDelete(claim, player);
     }
@@ -202,9 +246,13 @@ public class FoxClaimsProvider {
     }
 
     private static Claim convertToClaim(Object claimObj) {
-        if (claimObj == null) return null;
+        if (claimObj == null) {
+            System.out.println("❌ convertToClaim: claimObj null!");
+            return null;
+        }
 
         try {
+            System.out.println("🔄 Claim dönüştürülüyor: " + claimObj.getClass().getSimpleName());
             Class<?> claimClass = claimObj.getClass();
 
             int id = (int) claimClass.getField("id").get(claimObj);
@@ -229,13 +277,17 @@ public class FoxClaimsProvider {
             boolean isStreamerModeEnabled = (boolean) claimClass.getField("isStreamerModeEnabled").get(claimObj);
             Map<UUID, Map<String, Object>> members = (Map<UUID, Map<String, Object>>) claimClass.getField("members").get(claimObj);
 
-            return new Claim(id, name, ownerName, ownerUUID, worldNameField, x, y, z,
+            Claim claim = new Claim(id, name, ownerName, ownerUUID, worldNameField, x, y, z,
                     chunk_x, chunk_z, effectType, createdAt, energy, maxEnergy, logWebhook,
                     isMessageAlertEnabled, isSoundAlertEnabled, isScreenMessageEnabled,
                     isTimeHidden, isStreamerModeEnabled, members);
 
+            System.out.println("✅ Claim başarıyla dönüştürüldü - ID: " + claim.id + ", Name: " + claim.name);
+            return claim;
+
         } catch (Exception e) {
-            System.out.println("Claim dönüştürme hatası: " + e.getMessage());
+            System.out.println("❌ Claim dönüştürme hatası: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
