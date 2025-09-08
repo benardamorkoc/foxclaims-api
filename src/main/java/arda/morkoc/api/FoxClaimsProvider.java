@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
 
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
@@ -17,26 +16,16 @@ import java.util.UUID;
 public class FoxClaimsProvider {
 
     private static Plugin foxPlugin;
-    private static Plugin apiPlugin; // API plugin referansı
     private static Method getClaimAtChunkMethod;
     private static Method getClaimAtLocationMethod;
     private static Method getClaimByIdMethod;
     private static boolean initialized = false;
 
     public static boolean initialize() {
-        return initialize(null);
-    }
-
-    public static boolean initialize(Plugin apiPluginInstance) {
         if (initialized) return true;
 
         try {
             foxPlugin = Bukkit.getPluginManager().getPlugin("FoxClaims");
-
-            // API plugin referansını ayarla
-            if (apiPluginInstance != null) {
-                apiPlugin = apiPluginInstance;
-            }
 
             if (foxPlugin == null || !foxPlugin.isEnabled()) {
                 return false;
@@ -64,48 +53,48 @@ public class FoxClaimsProvider {
         return initialize();
     }
 
-    public static void notifyClaimCreate(Claim claim, Player player) {
+    public static void notifyClaimCreate(final Claim claim, final Player player) {
         if (!initialized) {
             System.out.println("❌ FoxClaims API henüz başlatılmadı!");
             return;
         }
 
-        // Event'i hem ana plugin hem de API plugin üzerinden tetikle
-        PluginManager pm = Bukkit.getPluginManager();
-        FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
+        // Event'i ana thread'de tetikle
+        final FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
 
-        // Ana plugin'den tetikle
-        pm.callEvent(event);
-
-        // API plugin varsa, onun üzerinden de tetikle
-        if (apiPlugin != null) {
-            // Scheduler kullanarak bir sonraki tick'te tetikle
-            Bukkit.getScheduler().runTask(apiPlugin, () -> {
-                pm.callEvent(new FoxClaimsCreateEvent(claim, player));
+        // Eğer ana thread'deyse direkt tetikle, değilse ana thread'e aktar
+        if (Bukkit.isPrimaryThread()) {
+            Bukkit.getPluginManager().callEvent(event);
+        } else {
+            Bukkit.getScheduler().runTask(foxPlugin, new Runnable() {
+                @Override
+                public void run() {
+                    Bukkit.getPluginManager().callEvent(event);
+                }
             });
         }
 
         System.out.println("✅ FoxClaimsCreateEvent tetiklendi - Claim ID: " + claim.id);
     }
 
-    public static void notifyClaimDelete(Claim claim, Player player) {
+    public static void notifyClaimDelete(final Claim claim, final Player player) {
         if (!initialized) {
             System.out.println("❌ FoxClaims API henüz başlatılmadı!");
             return;
         }
 
-        // Event'i hem ana plugin hem de API plugin üzerinden tetikle
-        PluginManager pm = Bukkit.getPluginManager();
-        FoxClaimsDeleteEvent event = new FoxClaimsDeleteEvent(claim, player);
+        // Event'i ana thread'de tetikle
+        final FoxClaimsDeleteEvent event = new FoxClaimsDeleteEvent(claim, player);
 
-        // Ana plugin'den tetikle
-        pm.callEvent(event);
-
-        // API plugin varsa, onun üzerinden de tetikle
-        if (apiPlugin != null) {
-            // Scheduler kullanarak bir sonraki tick'te tetikle
-            Bukkit.getScheduler().runTask(apiPlugin, () -> {
-                pm.callEvent(new FoxClaimsDeleteEvent(claim, player));
+        // Eğer ana thread'deyse direkt tetikle, değilse ana thread'e aktar
+        if (Bukkit.isPrimaryThread()) {
+            Bukkit.getPluginManager().callEvent(event);
+        } else {
+            Bukkit.getScheduler().runTask(foxPlugin, new Runnable() {
+                @Override
+                public void run() {
+                    Bukkit.getPluginManager().callEvent(event);
+                }
             });
         }
 
