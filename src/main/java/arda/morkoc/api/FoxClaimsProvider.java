@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginManager;
 
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
@@ -16,16 +17,26 @@ import java.util.UUID;
 public class FoxClaimsProvider {
 
     private static Plugin foxPlugin;
+    private static Plugin apiPlugin; // API plugin referansı
     private static Method getClaimAtChunkMethod;
     private static Method getClaimAtLocationMethod;
     private static Method getClaimByIdMethod;
     private static boolean initialized = false;
 
     public static boolean initialize() {
+        return initialize(null);
+    }
+
+    public static boolean initialize(Plugin apiPluginInstance) {
         if (initialized) return true;
 
         try {
             foxPlugin = Bukkit.getPluginManager().getPlugin("FoxClaims");
+
+            // API plugin referansını ayarla
+            if (apiPluginInstance != null) {
+                apiPlugin = apiPluginInstance;
+            }
 
             if (foxPlugin == null || !foxPlugin.isEnabled()) {
                 return false;
@@ -59,7 +70,22 @@ public class FoxClaimsProvider {
             return;
         }
 
-        Bukkit.getPluginManager().callEvent(new FoxClaimsCreateEvent(claim, player));
+        // Event'i hem ana plugin hem de API plugin üzerinden tetikle
+        PluginManager pm = Bukkit.getPluginManager();
+        FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
+
+        // Ana plugin'den tetikle
+        pm.callEvent(event);
+
+        // API plugin varsa, onun üzerinden de tetikle
+        if (apiPlugin != null) {
+            // Scheduler kullanarak bir sonraki tick'te tetikle
+            Bukkit.getScheduler().runTask(apiPlugin, () -> {
+                pm.callEvent(new FoxClaimsCreateEvent(claim, player));
+            });
+        }
+
+        System.out.println("✅ FoxClaimsCreateEvent tetiklendi - Claim ID: " + claim.id);
     }
 
     public static void notifyClaimDelete(Claim claim, Player player) {
@@ -68,7 +94,22 @@ public class FoxClaimsProvider {
             return;
         }
 
-        Bukkit.getPluginManager().callEvent(new FoxClaimsDeleteEvent(claim, player));
+        // Event'i hem ana plugin hem de API plugin üzerinden tetikle
+        PluginManager pm = Bukkit.getPluginManager();
+        FoxClaimsDeleteEvent event = new FoxClaimsDeleteEvent(claim, player);
+
+        // Ana plugin'den tetikle
+        pm.callEvent(event);
+
+        // API plugin varsa, onun üzerinden de tetikle
+        if (apiPlugin != null) {
+            // Scheduler kullanarak bir sonraki tick'te tetikle
+            Bukkit.getScheduler().runTask(apiPlugin, () -> {
+                pm.callEvent(new FoxClaimsDeleteEvent(claim, player));
+            });
+        }
+
+        System.out.println("✅ FoxClaimsDeleteEvent tetiklendi - Claim ID: " + claim.id);
     }
 
     public static Claim getClaimAtChunk(String worldName, int chunkX, int chunkZ) {
