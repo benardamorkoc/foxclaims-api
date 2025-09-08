@@ -1,5 +1,7 @@
 package arda.morkoc.api;
 
+import arda.morkoc.api.events.FoxClaimsCreateEvent;
+import arda.morkoc.api.events.FoxClaimsDeleteEvent;
 import arda.morkoc.api.model.Claim;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,7 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * FoxClaims API Provider - Object Bazlı Callback
+ * FoxClaims API Provider - Event Bazlı Sistem
  */
 public class FoxClaimsProvider {
 
@@ -23,14 +25,6 @@ public class FoxClaimsProvider {
     private static Method registerCallbackMethod;
     private static Method notifyCallbackMethod;
     private static boolean initialized = false;
-
-    /**
-     * Object bazlı callback interface - Claim nesnesini direkt alır
-     */
-    public interface ClaimCallback {
-        void onClaimCreate(Object claimObject, Object playerObject);
-        void onClaimDelete(Object claimObject, Object playerObject);
-    }
 
     /**
      * Provider'ı başlatır
@@ -55,15 +49,19 @@ public class FoxClaimsProvider {
             getClaimByIdMethod = foxPlugin.getClass()
                     .getMethod("getClaimById", int.class);
 
-            // Object callback metodları
+            // Callback metodları - Event sistemi için
             try {
                 registerCallbackMethod = foxPlugin.getClass()
                         .getMethod("registerAPICallback", Object.class);
 
                 notifyCallbackMethod = foxPlugin.getClass()
                         .getMethod("notifyAPICallbacks", String.class, Object.class, Object.class);
+
+                // Event handler'ı kaydet
+                registerEventHandler();
+
             } catch (NoSuchMethodException e) {
-                System.out.println("⚠️ Ana plugin'de object callback metodları bulunamadı!");
+                System.out.println("⚠️ Ana plugin'de callback metodları bulunamadı!");
             }
 
             initialized = true;
@@ -75,62 +73,91 @@ public class FoxClaimsProvider {
         }
     }
 
+    /**
+     * Event handler'ı ana plugin'e kaydet
+     */
+    private static void registerEventHandler() {
+        if (registerCallbackMethod == null) return;
+
+        try {
+            // Event handler objesi
+            Object eventHandler = new Object() {
+                @SuppressWarnings("unused")
+                public void onClaimCreate(Object claimObject, Object playerObject) {
+                    Claim claim = convertToClaim(claimObject);
+                    Player player = (Player) playerObject;
+
+                    if (claim != null && player != null) {
+                        FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
+                        Bukkit.getPluginManager().callEvent(event);
+                    }
+                }
+
+                @SuppressWarnings("unused")
+                public void onClaimDelete(Object claimObject, Object playerObject) {
+                    Claim claim = convertToClaim(claimObject);
+                    Player player = (Player) playerObject;
+
+                    if (claim != null && player != null) {
+                        FoxClaimsDeleteEvent event = new FoxClaimsDeleteEvent(claim, player);
+                        Bukkit.getPluginManager().callEvent(event);
+                    }
+                }
+            };
+
+            registerCallbackMethod.invoke(foxPlugin, eventHandler);
+            System.out.println("✅ FoxClaims event handler kaydedildi!");
+
+        } catch (Exception e) {
+            System.out.println("❌ Event handler kaydetme hatası: " + e.getMessage());
+        }
+    }
+
     public static boolean isAvailable() {
         return initialize();
     }
 
     /**
-     * Callback kaydı
-     */
-    public static void registerCallback(ClaimCallback callback) {
-        if (!initialize() || registerCallbackMethod == null) {
-            System.out.println("❌ Callback sistemi mevcut değil!");
-            return;
-        }
-
-        try {
-            registerCallbackMethod.invoke(foxPlugin, callback);
-        } catch (Exception e) {
-            System.out.println("❌ Object callback kaydetme hatası: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Claim create bildirimi - Claim objesini direkt geçer
+     * Ana pluginden çağrılır - Claim oluşturulduğunda
+     * Bu metodu ana plugininizden claim oluşturulduğunda çağırın
      */
     public static void notifyClaimCreate(Claim claim, Player player) {
-        if (!initialize() || notifyCallbackMethod == null) {
-            System.out.println("❌ Callback sistemi mevcut değil!");
-            return;
-        }
-
-        try {
-            // Event type ile birlikte Claim ve Player'ı geçir
-            notifyCallbackMethod.invoke(foxPlugin, "CREATE", claim, player);
-
-        } catch (Exception e) {
-            System.out.println("❌ Create callback bildirim hatası: " + e.getMessage());
+        if (claim != null && player != null) {
+            FoxClaimsCreateEvent event = new FoxClaimsCreateEvent(claim, player);
+            Bukkit.getPluginManager().callEvent(event);
         }
     }
 
     /**
-     * Claim delete bildirimi - Claim objesini direkt geçer
+     * Ana pluginden çağrılır - Claim silindiğinde
+     * Bu metodu ana plugininizden claim silindiğinde çağırın
      */
     public static void notifyClaimDelete(Claim claim, Player player) {
-        if (!initialize() || notifyCallbackMethod == null) {
-            System.out.println("❌ Callback sistemi mevcut değil!");
-            return;
-        }
-
-        try {
-            // Event type ile birlikte Claim ve Player'ı geçir
-            notifyCallbackMethod.invoke(foxPlugin, "DELETE", claim, player);
-
-        } catch (Exception e) {
-            System.out.println("❌ Delete callback bildirim hatası: " + e.getMessage());
+        if (claim != null && player != null) {
+            FoxClaimsDeleteEvent event = new FoxClaimsDeleteEvent(claim, player);
+            Bukkit.getPluginManager().callEvent(event);
         }
     }
 
+    /**
+     * Ana pluginden çağrılır - Object ile claim oluşturulduğunda
+     * Bu metodu ana plugininizden direkt object ile çağırabilirsiniz
+     */
+    public static void notifyClaimCreate(Object claimObject, Player player) {
+        Claim claim = convertToClaim(claimObject);
+        notifyClaimCreate(claim, player);
+    }
+
+    /**
+     * Ana pluginden çağrılır - Object ile claim silindiğinde
+     * Bu metodu ana plugininizden direkt object ile çağırabilirsiniz
+     */
+    public static void notifyClaimDelete(Object claimObject, Player player) {
+        Claim claim = convertToClaim(claimObject);
+        notifyClaimDelete(claim, player);
+    }
+
+    // API metodları - değişiklik yok
     public static Claim getClaimAtChunk(String worldName, int chunkX, int chunkZ) {
         if (!initialize()) return null;
 
@@ -168,7 +195,7 @@ public class FoxClaimsProvider {
     }
 
     /**
-     * Object'i Claim'e çevirir - Helper method callback'ler için de kullanılabilir
+     * Object'i Claim'e çevirir - Helper method
      */
     public static Claim convertObjectToClaim(Object claimObj) {
         return convertToClaim(claimObj);
