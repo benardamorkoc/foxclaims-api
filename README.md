@@ -147,110 +147,65 @@ public class FoxClaimsListener implements Listener {
 
 The `members` property in the Claim class contains detailed permission information for each member. Here's how to work with this data:
 
-#### Checking Member Permissions
+#### Essential Helper Methods
 
 ```java
 import java.util.Map;
 import java.util.UUID;
 
-public void checkMemberPermissions(Claim claim, UUID playerUUID) {
+/**
+ * Get the role of a player in a specific claim
+ * @param claim The claim to check
+ * @param playerUUID The player's UUID
+ * @return The player's role (e.g., "owner", "member") or null if not a member
+ */
+public String getPlayerRole(Claim claim, UUID playerUUID) {
     if (claim.members.containsKey(playerUUID)) {
         Map<String, Object> permissions = claim.members.get(playerUUID);
-        
-        // Check role
-        String role = (String) permissions.get("role");
+        return (String) permissions.get("role");
+    }
+    return null;
+}
+
+/**
+ * Check if a player has a specific permission in a claim
+ * @param claim The claim to check
+ * @param playerUUID The player's UUID
+ * @param permission The permission to check (e.g., "break-blocks", "sethome")
+ * @return true if the player has the permission, false otherwise
+ */
+public boolean hasPermission(Claim claim, UUID playerUUID, String permission) {
+    if (claim.members.containsKey(playerUUID)) {
+        Map<String, Object> permissions = claim.members.get(playerUUID);
+        return (Boolean) permissions.getOrDefault(permission, false);
+    }
+    return false;
+}
+```
+
+#### Usage Examples
+
+```java
+public void exampleUsage(Claim claim, UUID playerUUID) {
+    // Get player's role
+    String role = getPlayerRole(claim, playerUUID);
+    if (role != null) {
         System.out.println("Player role: " + role);
-        
-        // Check specific permissions
-        boolean canBreakBlocks = (Boolean) permissions.getOrDefault("break-blocks", false);
-        boolean canPlaceBlocks = (Boolean) permissions.getOrDefault("place-blocks", false);
-        boolean hasSetheHome = (Boolean) permissions.getOrDefault("sethome", false);
-        
-        System.out.println("Can break blocks: " + canBreakBlocks);
-        System.out.println("Can place blocks: " + canPlaceBlocks);
-        System.out.println("Has sethome permission: " + hasSetheHome);
-    }
-}
-```
-
-#### Listing All Members with Their Roles
-
-```java
-public void listClaimMembers(Claim claim) {
-    System.out.println("=== Claim Members for: " + claim.name + " ===");
-    
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        String role = (String) permissions.get("role");
-        
-        String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
-        System.out.println("- " + playerName + " (" + role + ")");
-    }
-}
-```
-
-#### Finding Members with Specific Permissions
-
-```java
-public void findMembersWithPermission(Claim claim, String permission) {
-    System.out.println("Members with '" + permission + "' permission:");
-    
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        
-        boolean hasPermission = (Boolean) permissions.getOrDefault(permission, false);
-        if (hasPermission) {
-            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
-            String role = (String) permissions.get("role");
-            System.out.println("- " + playerName + " (" + role + ")");
-        }
-    }
-}
-```
-
-#### Getting Members by Role
-
-```java
-import java.util.List;
-import java.util.ArrayList;
-
-public List<UUID> getMembersByRole(Claim claim, String targetRole) {
-    List<UUID> membersWithRole = new ArrayList<>();
-    
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        String role = (String) permissions.get("role");
-        
-        if (targetRole.equals(role)) {
-            membersWithRole.add(memberUUID);
-        }
+    } else {
+        System.out.println("Player is not a member of this claim");
+        return;
     }
     
-    return membersWithRole;
-}
-```
-
-#### Example: Integration with Other Systems
-
-```java
-// Example: Add members with farmer-storage permission to a farming system
-public void syncWithFarmingSystem(Claim claim, FarmingSystem farmingSystem) {
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        
-        String role = (String) permissions.get("role");
-        boolean hasFarmerStorage = (Boolean) permissions.getOrDefault("farmer-storage", false);
-        
-        // Add members with farmer-storage permission to farming system
-        if ("member".equals(role) && hasFarmerStorage) {
-            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
-            farmingSystem.addMember(memberUUID, playerName);
-        }
-    }
+    // Check specific permissions
+    boolean canBreakBlocks = hasPermission(claim, playerUUID, "break-blocks");
+    boolean canPlaceBlocks = hasPermission(claim, playerUUID, "place-blocks");
+    boolean hasSetHome = hasPermission(claim, playerUUID, "sethome");
+    boolean canUseFarmerStorage = hasPermission(claim, playerUUID, "farmer-storage");
+    
+    System.out.println("Can break blocks: " + canBreakBlocks);
+    System.out.println("Can place blocks: " + canPlaceBlocks);
+    System.out.println("Has sethome permission: " + hasSetHome);
+    System.out.println("Can use farmer storage: " + canUseFarmerStorage);
 }
 ```
 
