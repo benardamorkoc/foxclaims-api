@@ -143,6 +143,119 @@ public class FoxClaimsListener implements Listener {
 
 -----
 
+### 3\. Working with Claim Members and Permissions
+
+The `members` property in the Claim class contains detailed permission information for each member. Here's how to work with this data:
+
+#### Checking Member Permissions
+
+```java
+import java.util.Map;
+import java.util.UUID;
+
+public void checkMemberPermissions(Claim claim, UUID playerUUID) {
+    if (claim.members.containsKey(playerUUID)) {
+        Map<String, Object> permissions = claim.members.get(playerUUID);
+        
+        // Check role
+        String role = (String) permissions.get("role");
+        System.out.println("Player role: " + role);
+        
+        // Check specific permissions
+        boolean canBreakBlocks = (Boolean) permissions.getOrDefault("break-blocks", false);
+        boolean canPlaceBlocks = (Boolean) permissions.getOrDefault("place-blocks", false);
+        boolean hasSetheHome = (Boolean) permissions.getOrDefault("sethome", false);
+        
+        System.out.println("Can break blocks: " + canBreakBlocks);
+        System.out.println("Can place blocks: " + canPlaceBlocks);
+        System.out.println("Has sethome permission: " + hasSetheHome);
+    }
+}
+```
+
+#### Listing All Members with Their Roles
+
+```java
+public void listClaimMembers(Claim claim) {
+    System.out.println("=== Claim Members for: " + claim.name + " ===");
+    
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        String role = (String) permissions.get("role");
+        
+        String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
+        System.out.println("- " + playerName + " (" + role + ")");
+    }
+}
+```
+
+#### Finding Members with Specific Permissions
+
+```java
+public void findMembersWithPermission(Claim claim, String permission) {
+    System.out.println("Members with '" + permission + "' permission:");
+    
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        
+        boolean hasPermission = (Boolean) permissions.getOrDefault(permission, false);
+        if (hasPermission) {
+            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
+            String role = (String) permissions.get("role");
+            System.out.println("- " + playerName + " (" + role + ")");
+        }
+    }
+}
+```
+
+#### Getting Members by Role
+
+```java
+import java.util.List;
+import java.util.ArrayList;
+
+public List<UUID> getMembersByRole(Claim claim, String targetRole) {
+    List<UUID> membersWithRole = new ArrayList<>();
+    
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        String role = (String) permissions.get("role");
+        
+        if (targetRole.equals(role)) {
+            membersWithRole.add(memberUUID);
+        }
+    }
+    
+    return membersWithRole;
+}
+```
+
+#### Example: Integration with Other Systems
+
+```java
+// Example: Add members with farmer-storage permission to a farming system
+public void syncWithFarmingSystem(Claim claim, FarmingSystem farmingSystem) {
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        
+        String role = (String) permissions.get("role");
+        boolean hasFarmerStorage = (Boolean) permissions.getOrDefault("farmer-storage", false);
+        
+        // Add members with farmer-storage permission to farming system
+        if ("member".equals(role) && hasFarmerStorage) {
+            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
+            farmingSystem.addMember(memberUUID, playerName);
+        }
+    }
+}
+```
+
+-----
+
 ## 📊 Claim Model Properties
 
 The `Claim` class has the following properties:
@@ -166,6 +279,58 @@ public class Claim {
     public boolean isScreenMessageEnabled;   // Is screen message active
     public boolean isTimeHidden;             // Is time hidden
     public boolean isStreamerModeEnabled;    // Is streamer mode active
-    public Map<UUID, Map<String, Object>> members; // Claim members
+    public Map<UUID, Map<String, Object>> members; // Claim members with permissions
 }
 ```
+
+## 🔐 Available Permissions
+
+The following permissions are available in the members' permission map:
+
+### Roles
+- `"role"` - Player's role in the claim (`"owner"`, `"member"`, etc.)
+
+### Block Operations
+- `"place-blocks"` - Place blocks
+- `"break-blocks"` - Break blocks
+
+### Spawner Management
+- `"place-spawners"` - Place spawners
+- `"break-spawners"` - Break spawners
+
+### Lighting
+- `"place-torches"` - Place torches
+- `"break-torches"` - Break torches
+- `"interact-beacon-effects"` - Interact with beacon effects
+
+### Fluid Operations
+- `"pour-water"` - Pour water
+- `"pour-lava"` - Pour lava
+
+### Storage and Inventory
+- `"open-inventory-blocks"` - Open inventory blocks (chests, furnaces, etc.)
+- `"break-inventory-blocks"` - Break inventory blocks
+- `"place-hoppers"` - Place hoppers
+- `"break-hoppers"` - Break hoppers
+- `"farmer-storage"` - Access farmer storage
+
+### Transportation
+- `"place-minecarts"` - Place minecarts
+- `"break-minecarts"` - Break minecarts
+- `"place-boats"` - Place boats
+- `"break-boats"` - Break boats
+
+### Interaction
+- `"open-doors"` - Open doors
+- `"close-doors"` - Close doors
+- `"interact-mobs"` - Interact with mobs
+- `"interact-frames"` - Interact with item frames
+- `"interact-triggers"` - Interact with triggers (buttons, pressure plates, etc.)
+- `"interact-armor-stands"` - Interact with armor stands
+
+### Player Management
+- `"teleport-players"` - Teleport players
+- `"sethome"` - Set home location
+
+### Information
+- `"see-time"` - View time information
