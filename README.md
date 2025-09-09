@@ -123,11 +123,9 @@ public class ExampleUsage {
 
 ```java
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 
-public void findClaimByLocation(Player player) {
-    Location loc = player.getLocation();
-    Claim claim = FoxClaimsProvider.getClaimAtLocation(loc);
+public void findClaimByLocation(Location location) {
+    Claim claim = FoxClaimsProvider.getClaimAtLocation(location);
     
     if (claim != null) {
         player.sendMessage("You are currently in the claim: " + claim.name + "!");
@@ -250,87 +248,6 @@ public void exampleUsage(Claim claim, UUID playerUUID) {
     System.out.println("Can place blocks: " + canPlaceBlocks);
     System.out.println("Has sethome permission: " + hasSetHome);
     System.out.println("Can use farmer storage: " + canUseFarmerStorage);
-}
-```
-
-#### Listing All Members with Their Roles
-
-```java
-public void listClaimMembers(Claim claim) {
-    System.out.println("=== Claim Members for: " + claim.name + " ===");
-    
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        String role = (String) permissions.get("role");
-        
-        String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
-        System.out.println("- " + playerName + " (" + role + ")");
-    }
-}
-```
-
-#### Finding Members with Specific Permissions
-
-```java
-public void findMembersWithPermission(Claim claim, String permission) {
-    System.out.println("Members with '" + permission + "' permission:");
-    
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        
-        boolean hasPermission = (Boolean) permissions.getOrDefault(permission, false);
-        if (hasPermission) {
-            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
-            String role = (String) permissions.get("role");
-            System.out.println("- " + playerName + " (" + role + ")");
-        }
-    }
-}
-```
-
-#### Getting Members by Role
-
-```java
-import java.util.List;
-import java.util.ArrayList;
-
-public List<UUID> getMembersByRole(Claim claim, String targetRole) {
-    List<UUID> membersWithRole = new ArrayList<>();
-    
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        String role = (String) permissions.get("role");
-        
-        if (targetRole.equals(role)) {
-            membersWithRole.add(memberUUID);
-        }
-    }
-    
-    return membersWithRole;
-}
-```
-
-#### Example: Integration with Other Systems
-
-```java
-// Example: Add members with farmer-storage permission to a farming system
-public void syncWithFarmingSystem(Claim claim, FarmingSystem farmingSystem) {
-    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
-        UUID memberUUID = entry.getKey();
-        Map<String, Object> permissions = entry.getValue();
-        
-        String role = (String) permissions.get("role");
-        boolean hasFarmerStorage = (Boolean) permissions.getOrDefault("farmer-storage", false);
-        
-        // Add members with farmer-storage permission to farming system
-        if ("member".equals(role) && hasFarmerStorage) {
-            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
-            farmingSystem.addMember(memberUUID, playerName);
-        }
-    }
 }
 ```
 
