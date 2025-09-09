@@ -4,7 +4,10 @@ Comprehensive API library developed for the FoxClaims plugin. This API allows ot
 
 -----
 
-## 📦 Maven Setup
+## 📦 Setup
+
+<details>
+<summary>📋 <strong>Maven Setup</strong> (Click to expand)</summary>
 
 ### Add Repository
 
@@ -32,6 +35,47 @@ Add the following dependency to the `<dependencies>` section of your `pom.xml` f
     </dependency>
 </dependencies>
 ```
+
+</details>
+
+<details>
+<summary>🐘 <strong>Gradle Setup</strong> (Click to expand)</summary>
+
+### Add Repository
+
+Add the following repository to your `build.gradle` file:
+
+```gradle
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+```
+
+### Add Dependency
+
+Add the following dependency to your `build.gradle` file:
+
+```gradle
+dependencies {
+    implementation 'com.github.benardamorkoc:foxclaims-api:v1.3.6'
+}
+```
+
+#### For Gradle (Kotlin DSL)
+
+If you're using Kotlin DSL (`build.gradle.kts`):
+
+```kotlin
+repositories {
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    implementation("com.github.benardamorkoc:foxclaims-api:v1.3.6")
+}
+```
+
+</details>
 
 ### Plugin.yml Dependency
 
@@ -206,6 +250,87 @@ public void exampleUsage(Claim claim, UUID playerUUID) {
     System.out.println("Can place blocks: " + canPlaceBlocks);
     System.out.println("Has sethome permission: " + hasSetHome);
     System.out.println("Can use farmer storage: " + canUseFarmerStorage);
+}
+```
+
+#### Listing All Members with Their Roles
+
+```java
+public void listClaimMembers(Claim claim) {
+    System.out.println("=== Claim Members for: " + claim.name + " ===");
+    
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        String role = (String) permissions.get("role");
+        
+        String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
+        System.out.println("- " + playerName + " (" + role + ")");
+    }
+}
+```
+
+#### Finding Members with Specific Permissions
+
+```java
+public void findMembersWithPermission(Claim claim, String permission) {
+    System.out.println("Members with '" + permission + "' permission:");
+    
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        
+        boolean hasPermission = (Boolean) permissions.getOrDefault(permission, false);
+        if (hasPermission) {
+            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
+            String role = (String) permissions.get("role");
+            System.out.println("- " + playerName + " (" + role + ")");
+        }
+    }
+}
+```
+
+#### Getting Members by Role
+
+```java
+import java.util.List;
+import java.util.ArrayList;
+
+public List<UUID> getMembersByRole(Claim claim, String targetRole) {
+    List<UUID> membersWithRole = new ArrayList<>();
+    
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        String role = (String) permissions.get("role");
+        
+        if (targetRole.equals(role)) {
+            membersWithRole.add(memberUUID);
+        }
+    }
+    
+    return membersWithRole;
+}
+```
+
+#### Example: Integration with Other Systems
+
+```java
+// Example: Add members with farmer-storage permission to a farming system
+public void syncWithFarmingSystem(Claim claim, FarmingSystem farmingSystem) {
+    for (Map.Entry<UUID, Map<String, Object>> entry : claim.members.entrySet()) {
+        UUID memberUUID = entry.getKey();
+        Map<String, Object> permissions = entry.getValue();
+        
+        String role = (String) permissions.get("role");
+        boolean hasFarmerStorage = (Boolean) permissions.getOrDefault("farmer-storage", false);
+        
+        // Add members with farmer-storage permission to farming system
+        if ("member".equals(role) && hasFarmerStorage) {
+            String playerName = Bukkit.getOfflinePlayer(memberUUID).getName();
+            farmingSystem.addMember(memberUUID, playerName);
+        }
+    }
 }
 ```
 
