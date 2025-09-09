@@ -285,7 +285,7 @@ public class Claim {
 The following permissions are available in the members' permission map:
 
 ### Roles
-- `"role"` - Player's role in the claim (`"owner"`, `"member"`, etc.)
+- `"role"` - Player's role in the claim (`"owner"`, `"member"`)
 
 ### Block Operations
 - `"place-blocks"` - Place blocks
