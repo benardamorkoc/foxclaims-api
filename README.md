@@ -282,7 +282,7 @@ public class Claim {
 
 ## 🔐 Available Permissions
 
-The following permissions are available in the members' permission map:
+The following permissions are available in the member's permission map:
 
 ### Roles
 - `"role"` - Player's role in the claim (`"owner"`, `"member"`)
